@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Orchid\Platform\Models\User as BaseUser; 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Orchid\Platform\Models\User as BaseUser;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
@@ -26,6 +27,7 @@ class User extends BaseUser
     protected $hidden = [
         'password',
         'remember_token',
+        'permissions',
     ];
 
     /**
@@ -34,6 +36,11 @@ class User extends BaseUser
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'permissions' => 'array',
     ];
-    
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
 }
