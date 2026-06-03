@@ -5,55 +5,38 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
 use App\Models\Post;
-use Illuminate\Support\Facades\Auth;
+use App\Services\PostService;
+use App\Http\Resources\PostResource;
 
 class PostController extends Controller
 {
+    public function __construct(private PostService $postService) {}
+
     public function index()
     {
-        $posts = Post::where('is_published', true)
-            ->with('user:id,name')
-            ->latest()
-            ->paginate(10);
-
-        return response()->json($posts);
+        return PostResource::collection($this->postService->index());
     }
 
     public function store(StorePostRequest $request)
     {
-        $validated = $request->validated();
-
-        $post = Auth::user()->posts()->create($validated);
-
-        return response()->json($post, 201);
+        $post = $this->postService->store($request->validated());
+        return response()->json(new PostResource($post), 201);
     }
 
     public function show(Post $post)
     {
-        if (!$post->is_published && Auth::id() !== $post->user_id) {
-            abort(404, 'Статья не найдена');
-        }
-
-        return response()->json($post->load('user:id,name'));
+        return response()->json(new PostResource($this->postService->show($post)));
     }
 
     public function update(UpdatePostRequest $request, Post $post)
     {
-        $validated = $request->validated();
-
-        $post->update($validated);
-
-        return response()->json($post);
+        $post = $this->postService->update($post, $request->validated());
+        return response()->json(new PostResource($post));
     }
-    
+
     public function destroy(Post $post)
     {
-        if (Auth::id() !== $post->user_id) {
-            abort(403, 'Нет прав на удаление этой статьи');
-        }
-
-        $post->delete();
-
+        $this->postService->destroy($post);
         return response()->json(['message' => 'Статья удалена']);
     }
 }
