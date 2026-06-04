@@ -9,12 +9,11 @@ Route::post('/register', [AuthController::class, 'register'])->name('auth.regist
 Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    })->name('auth.user');
-    
+    Route::get('/user', fn(Request $r) => $r->user())->name('auth.user');
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     
+    Route::get('/my-posts', [PostController::class, 'myPosts'])->name('posts.my');
+     
     Route::apiResource('posts', PostController::class)->only(['store', 'update', 'destroy']);
 });
 

@@ -7,14 +7,27 @@ use App\Http\Requests\Post\UpdatePostRequest;
 use App\Models\Post;
 use App\Services\PostService;
 use App\Http\Resources\PostResource;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
     public function __construct(private PostService $postService) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        return PostResource::collection($this->postService->index());
+        $filters = $request->only(['date_from', 'date_to', 'sort']);
+        return PostResource::collection($this->postService->index($filters));
+    }
+
+    public function myPosts(Request $request)
+    {
+        $filters = $request->only(['date_from', 'date_to', 'sort']);
+        $userId = Auth::id();
+        
+        return PostResource::collection(
+            $this->postService->myPosts($userId, $filters)
+        );
     }
 
     public function store(StorePostRequest $request)
@@ -37,6 +50,6 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $this->postService->destroy($post);
-        return response()->json(['message' => 'Статья удалена']);
+        return response()->json(['message' => 'Статья успешно удалена']);
     }
 }
